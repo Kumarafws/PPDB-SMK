@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  siswa
+  admin
+  superadmin
+}
+
+enum RegistrationStatus {
+  draft
+  submitted
+  verified
+  interview_scheduled
+  accepted
+  rejected
+}
+
+enum StudentDocumentStatus {
+  pending
+  incomplete
+  complete
+  verified
+}
+
+enum DocumentType {
+  ktp
+  kk
+  ijazah
+  skhun
+  foto
+  akta
+}
+
+enum DocumentVerificationStatus {
+  pending
+  verified
+  rejected
+}
+
+enum SelectionStatus {
+  pending
+  accepted
+  rejected
+}
+
+model Profile {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String?
+  role         UserRole @default(siswa)
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student Student?
+
+  adminLogs         AdminLog[]  @relation("AdminActor")
+  verifiedStudents  Student[]   @relation("StudentVerifier")
+  verifiedDocuments Document[]  @relation("DocumentVerifier")
+}
+
+model Student {
+  id     String  @id @default(uuid())
+  userId String  @unique
+  user   Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nisn   String?
+  nik    String?
+  fullName String
+
+  birthPlace String?
+  birthDate  DateTime?
+  gender     String?
+  religion   String?
+
+  address    String?
+  rt         String?
+  rw         String?
+  village    String?
+  district   String?
+  city       String?
+  province   String?
+  postalCode String?
+
+  phone String?
+  email String?
+
+  anakKe                String?
+  jumlahSaudara         String?
+  registrationInfoSource String?
+  noKip                 String?
+
+  fatherName        String?
+  fatherOccupation  String?
+  fatherPhone       String?
+  motherName        String?
+  motherOccupation  String?
+  motherPhone       String?
+  guardianName      String?
+  guardianOccupation String?
+  guardianPhone     String?
+
+  schoolOrigin    String?
+  schoolAddress   String?
+  graduationYear  String?
+  firstChoice     String?
+
+  registrationStatus RegistrationStatus     @default(draft)
+  documentStatus     StudentDocumentStatus @default(pending)
+
+  interviewDate  DateTime?
+  interviewNotes String?
+
+  selectionStatus SelectionStatus?
+  selectionNotes  String?
+  acceptedMajor   String?
+
+  submittedAt DateTime?
+  verifiedAt  DateTime?
+  verifierId  String?
+  verifier    Profile? @relation("StudentVerifier", fields: [verifierId], references: [id])
+
+  documents Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id        String  @id @default(uuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  documentType DocumentType
+  fileUrl      String
+  fileName     String
+  fileSize     Int?
+
+  status           DocumentVerificationStatus @default(pending)
+  rejectionReason  String?
+  verifiedAt       DateTime?
+  verifiedById     String?
+  verifiedBy       Profile? @relation("DocumentVerifier", fields: [verifiedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, documentType])
+}
+
+model AdminLog {
+  id String @id @default(uuid())
+
+  adminId String
+  admin   Profile @relation("AdminActor", fields: [adminId], references: [id], onDelete: Cascade)
+
+  action      String
+  targetType  String?
+  targetId    String?
+  detailsJson String?
+  ipAddress   String?
+
+  createdAt DateTime @default(now())
+}
+
+model SchoolSetting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
