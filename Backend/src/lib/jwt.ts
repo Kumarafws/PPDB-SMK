@@ -1,5 +1,6 @@
 import jwt, { type JwtPayload, type SignOptions } from "jsonwebtoken"
 import type { UserRole } from "@prisma/client"
+import type { StringValue } from "ms"
 import { env } from "../config/env.js"
 
 export type AccessTokenPayload = {
@@ -10,7 +11,7 @@ export type AccessTokenPayload = {
 
 export function signAccessToken(payload: AccessTokenPayload): string {
   const options: SignOptions = {
-    expiresIn: env.JWT_EXPIRES_IN,
+    expiresIn: env.JWT_EXPIRES_IN as StringValue,
     subject: payload.sub,
   }
   return jwt.sign({ email: payload.email, role: payload.role }, env.JWT_SECRET, options)
