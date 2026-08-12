@@ -1,33 +1,45 @@
-/**
- * Route Handler: POST /api/auth/login
- * ------------------------------------
- * Bertindak sebagai "jembatan" antara form login di frontend dan backend Express.
- * Alur:
- *  1. Form login mengirim POST ke sini (bukan langsung ke backend)
- *  2. Route ini meneruskan request ke backend Express
- *  3. Jika backend berhasil, token JWT disimpan sebagai HttpOnly Cookie `ppdb_token`
- *  4. Redirect dilakukan sesuai role user
- *
- * Menyimpan token sebagai HttpOnly Cookie (bukan localStorage) agar:
- *  - Tidak bisa diakses oleh JavaScript (mencegah XSS)
- *  - Dapat dibaca oleh Next.js middleware untuk proteksi rute
- */
-
 import { NextRequest, NextResponse } from "next/server"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    console.log("BACKEND_URL:", BACKEND_URL)
+    console.log("LOGIN URL:", `${BACKEND_URL}/auth/login`)
+
     const backendRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(body),
     })
 
-    const data = await backendRes.json()
+    const responseText = await backendRes.text()
+
+    console.log("BACKEND STATUS:", backendRes.status)
+    console.log("BACKEND RESPONSE:", responseText)
+
+    let data
+
+    try {
+      data = JSON.parse(responseText)
+    } catch {
+      console.error(
+        "BACKEND RESPONSE BUKAN JSON:",
+        responseText
+      )
+
+      return NextResponse.json(
+        {
+          error: "Backend mengembalikan response yang bukan JSON",
+        },
+        { status: 502 }
+      )
+    }
 
     if (!backendRes.ok) {
       return NextResponse.json(
@@ -60,8 +72,11 @@ export async function POST(request: NextRequest) {
     return response
   } catch (err) {
     console.error("[/api/auth/login]", err)
+
     return NextResponse.json(
-      { error: "Terjadi kesalahan server. Coba lagi nanti." },
+      {
+        error: "Terjadi kesalahan server. Coba lagi nanti.",
+      },
       { status: 500 }
     )
   }
