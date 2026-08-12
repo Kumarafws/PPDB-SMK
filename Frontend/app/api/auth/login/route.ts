@@ -7,9 +7,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    console.log("BACKEND_URL:", BACKEND_URL)
-    console.log("LOGIN URL:", `${BACKEND_URL}/auth/login`)
-
     const backendRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: "POST",
       headers: {
@@ -20,25 +17,14 @@ export async function POST(request: NextRequest) {
 
     const responseText = await backendRes.text()
 
-    console.log("BACKEND STATUS:", backendRes.status)
-    console.log("BACKEND RESPONSE:", responseText)
-
     let data
 
     try {
       data = JSON.parse(responseText)
     } catch {
-      console.error(
-        "BACKEND RESPONSE BUKAN JSON:",
-        responseText
-      )
-
       return NextResponse.json(
         {
-          error: "Backend mengembalikan response yang bukan JSON",
-          backendUrl: BACKEND_URL,
-          backendStatus: backendRes.status,
-          backendResponse: responseText.substring(0, 500),
+          error: "Backend mengembalikan response yang tidak valid",
         },
         { status: 502 }
       )
