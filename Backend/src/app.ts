@@ -11,7 +11,7 @@ import { errorHandler } from "./middleware/error-handler.js"
 const app = express()
 
 app.set("trust proxy", 1)
-app.use(helmet())
+app.use((helmet as unknown as () => import("express").RequestHandler)())
 app.use(cors({ origin: corsOriginOption(), credentials: true }))
 if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"))
