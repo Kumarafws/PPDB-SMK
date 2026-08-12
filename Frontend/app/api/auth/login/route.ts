@@ -36,6 +36,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Backend mengembalikan response yang bukan JSON",
+          backendUrl: BACKEND_URL,
+          backendStatus: backendRes.status,
+          backendResponse: responseText.substring(0, 500),
         },
         { status: 502 }
       )
@@ -43,8 +46,12 @@ export async function POST(request: NextRequest) {
 
     if (!backendRes.ok) {
       return NextResponse.json(
-        { error: data?.error ?? "Login gagal" },
-        { status: backendRes.status }
+        {
+          error: data?.error ?? "Login gagal",
+        },
+        {
+          status: backendRes.status,
+        }
       )
     }
 
@@ -77,7 +84,9 @@ export async function POST(request: NextRequest) {
       {
         error: "Terjadi kesalahan server. Coba lagi nanti.",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     )
   }
 }
